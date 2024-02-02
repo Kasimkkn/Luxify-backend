@@ -1,12 +1,11 @@
 import express from "express";
-import { singleUpload } from "../middlewares/multer.js";
 import { adminOnly } from "../middlewares/auth.js";
 import { getSingleProductDetails,deleteProduct, getAdminProducts, getAllProducts, getSingleProduct, getlatestProducts, newProduct, updateProduct,getAllCategories, getAllColors } from "../controllers/product.js";
 
 const app = express.Router();
 
 //To Create New Product  - /api/v1/product/new
-app.post("/new", adminOnly, singleUpload, newProduct);
+app.post("/new", adminOnly, newProduct);
 
 //To get all Products with filters  - /api/v1/product/all
 app.get("/all", getAllProducts);
@@ -27,7 +26,7 @@ app.get("/admin-products", adminOnly,getAdminProducts);
 app
   .route("/:id")
   .get(getSingleProduct)
-  .put(adminOnly,singleUpload, updateProduct)
+  .put(adminOnly, updateProduct)
   .delete(adminOnly, deleteProduct);
 
 // get single product details
