@@ -121,6 +121,10 @@ export const newProduct = TryCatch(
     if (!photo) return next(new ErrorHandler("Please add Photo", 400));
 
     if (!name || !price || !stock || !category || !description || !color) {
+      rm(photo.path, () => {
+        console.log("Deleted");
+      });
+
       return next(new ErrorHandler("Please enter All Fields", 400));
     }
 
@@ -157,14 +161,10 @@ export const updateProduct = TryCatch(async (req, res, next) => {
   if (!product) return next(new ErrorHandler("Product Not Found", 404));
 
   if (photo) {
-    if (product.photo) {
-      await cloudinary.v2.uploader.destroy(getPublicIdFromUrl(product.photo));
-    }
-    const Response = await cloudinary.v2.uploader.upload(photo.path, {
-      folder: "products",
+    rm(product.photo!, () => {
+      console.log("Old Photo Deleted");
     });
-
-    product.photo = Response.secure_url;
+    product.photo = photo.path;
   }
 
   if (name) product.name = name;
@@ -192,9 +192,9 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
   const product = await Product.findById(req.params.id);
   if (!product) return next(new ErrorHandler("Product Not Found", 404));
 
-  if (product.photo) {
-    await cloudinary.v2.uploader.destroy(getPublicIdFromUrl(product.photo));
-  }
+  rm(product.photo!, () => {
+    console.log("Product Photo Deleted");
+  });
 
   await product.deleteOne();
 
@@ -210,10 +210,6 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
   });
 });
 
-function getPublicIdFromUrl(photoUrl: string): string {
-  const publicIdMatch = /\/v\d+\/(.*\/)?(.+?)\.[a-zA-Z]+(#.*)?$/.exec(photoUrl);
-  return publicIdMatch ? publicIdMatch[2] : '';
-}
 
 export const getAllProducts = TryCatch(async (req: Request<{}, {}, {}, SearchRequestQuery>, res, next) => {
 
