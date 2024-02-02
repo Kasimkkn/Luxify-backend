@@ -10,7 +10,6 @@ import ErrorHandler from "../utils/utility-class.js";
 import { rm } from "fs";
 import { myCache } from "../app.js";
 import { invalidateCache } from "../utils/features.js";
-import cloudinary from 'cloudinary'
 
 export const getSingleProductDetails = TryCatch(async (req, res, next) => {
 
@@ -128,10 +127,6 @@ export const newProduct = TryCatch(
       return next(new ErrorHandler("Please enter All Fields", 400));
     }
 
-    const Response = await cloudinary.v2.uploader.upload(photo.path, {
-      folder: "products",
-    });
-
     await Product.create({
       name,
       price,
@@ -139,7 +134,7 @@ export const newProduct = TryCatch(
       stock,
       color,
       category: category.toLowerCase(),
-      photo: Response.secure_url,
+      photo: photo.path,
     });
 
     invalidateCache({ product: true, admin: true });
