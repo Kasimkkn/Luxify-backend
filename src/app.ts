@@ -5,16 +5,13 @@ import NodeCache from "node-cache";
 import { config } from "dotenv";
 import Stripe from "stripe";
 import cors from "cors";
-import cloudinary from 'cloudinary'
+
 // Importing Routes
 import userRoute from "./routes/user.js";
 import productRoute from "./routes/product.js";
 import orderRoute from "./routes/order.js";
 import paymentRoute from "./routes/payment.js";
 import dashboardRoute from "./routes/stats.js";
-
-const app = express();
-app.use(cors());
 
 config({
   path: "./.env",
@@ -29,13 +26,10 @@ connectDB(mongoURI);
 export const stripe = new Stripe(stripeKey);
 export const myCache = new NodeCache();
 
-cloudinary['v2'].config({
-  cloud_name: process.env.CLOUDINARY_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-} as any);
+const app = express();
 
 app.use(express.json());
+app.use(cors());
 
 app.get("/", (req, res) => {
   res.send("API Working with /api/v1");

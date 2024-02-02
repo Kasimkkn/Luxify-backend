@@ -1,4 +1,4 @@
-import { Request, response } from "express";
+import { Request } from "express";
 import { TryCatch } from "../middlewares/error.js";
 import {
   BaseQuery,

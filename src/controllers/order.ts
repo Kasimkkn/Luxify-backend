@@ -5,6 +5,7 @@ import { Order } from "../models/order.js";
 import { invalidateCache, reduceStock } from "../utils/features.js";
 import ErrorHandler from "../utils/utility-class.js";
 import { myCache } from "../app.js";
+import nodemailer from 'nodemailer';
 import sendEmail from "../utils/sendEmail.js";
 export const myOrders = TryCatch(async (req, res, next) => {
   const { id: user } = req.query;
@@ -90,7 +91,7 @@ export const newOrder = TryCatch(
     await reduceStock(orderItems);
 
     const orderItemsHtml = Object.values(orderItems).map(item => `
-    <img src="https://luxify-yhhu.onrender.com/${item.photo}" alt="product" style="width:40px;height:40px;border-radius:50%;" />
+    <img src={${item.photo}} alt="product" />
   <p>
     <strong>Name:</strong> ${item.name} </br>
     <strong>Price:</strong> ${item.price} </br>
