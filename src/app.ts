@@ -5,6 +5,7 @@ import NodeCache from "node-cache";
 import { config } from "dotenv";
 import Stripe from "stripe";
 import cors from "cors";
+import cloudinary from 'cloudinary';
 
 // Importing Routes
 import userRoute from "./routes/user.js";
@@ -22,6 +23,12 @@ const mongoURI = process.env.MONGO_URI || "";
 const stripeKey = process.env.STRIPE_KEY || "";
 
 connectDB(mongoURI);
+
+cloudinary['v2'].config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export const stripe = new Stripe(stripeKey);
 export const myCache = new NodeCache();
@@ -42,7 +49,6 @@ app.use("/api/v1/order", orderRoute);
 app.use("/api/v1/payment", paymentRoute);
 app.use("/api/v1/dashboard", dashboardRoute);
 
-app.use("/uploads", express.static("uploads"));
 app.use(errorMiddleware);
 
 app.listen(port, () => {

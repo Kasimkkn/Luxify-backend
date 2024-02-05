@@ -1,14 +1,19 @@
 import multer from "multer";
 import { v4 as uuid } from "uuid";
+import cloudinary from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
-const storage = multer.diskStorage({
-  destination(req, file, callback) {
-    callback(null, "uploads");
-  },
-  filename(req, file, callback) {
-    const id = uuid();
-    const extName = file.originalname.split(".").pop();
-    callback(null, `${id}.${extName}`);
+
+cloudinary['v2'].config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary.v2,
+  params: {
+    public_id: (req, file) => uuid(),
   },
 });
 
