@@ -91,7 +91,7 @@ export const newOrder = TryCatch(
     await reduceStock(orderItems);
 
     const orderItemsHtml = Object.values(orderItems).map(item => `
-    <img src={${item.photo}} alt="product" />
+    <img src="${item.photo}" alt="product" style="height: 50px; width: 50px;border-radius:20px"/>
   <p>
     <strong>Name:</strong> ${item.name} </br>
     <strong>Price:</strong> ${item.price} </br>
