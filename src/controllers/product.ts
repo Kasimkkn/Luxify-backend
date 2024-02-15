@@ -114,55 +114,71 @@ export const getAllColors = TryCatch(async (req,res,next)=>{
 
 export const newProduct = TryCatch(
   async (req: Request<{}, {}, NewProductRequestBody>, res, next) => {
-    const { name, price, category, description,color, stock } = req.body;
-    const photo = req.file;
+    const { name, price, category, description, color, stock } = req.body;
+    const photos = req.files as Express.Multer.File[];
 
-    if (!photo) return next(new ErrorHandler("Please add Photo", 400));
+    if (!photos || photos.length === 0) return next(new ErrorHandler("Please add Photo", 400));
 
     if (!name || !price || !stock || !category || !description || !color) {
       return next(new ErrorHandler("Please enter All Fields", 400));
     }
 
-    const cloudinaryResponse = await cloudinary.v2.uploader.upload(photo.path, {
-      folder: "products",
-    });
+    try {
+      const photoUrls = await Promise.all(photos.map(async (photo) => {
+        const cloudinaryResponse = await cloudinary.v2.uploader.upload(photo.path, {
+          folder: "products",
+        });
+        return cloudinaryResponse.secure_url;
+      }));
 
-    await Product.create({
-      name,
-      price,
-      description,
-      stock,
-      color,
-      category: category.toLowerCase(),
-      photo: cloudinaryResponse.secure_url,
-    });
+      await Product.create({
+        name,
+        price,
+        description,
+        stock,
+        color,
+        category: category.toLowerCase(),
+        photos: photoUrls, // Use 'photos' instead of 'photo' to store multiple photo URLs
+      });
 
-    invalidateCache({ product: true, admin: true });
+      invalidateCache({ product: true, admin: true });
 
-    return res.status(201).json({
-      success: true,
-      message: "Product Created Successfully",
-    });
+      return res.status(201).json({
+        success: true,
+        message: "Product Created Successfully",
+      });
+    } catch (error) {
+      return next(new ErrorHandler("Failed to create product", 500));
+    }
   }
 );
 
 
+
 export const updateProduct = TryCatch(async (req, res, next) => {
   const { id } = req.params;
-  const {name, price, category, description,color, stock} = req.body;
-  const photo = req.file;
+  const { name, price, category, description, color, stock } = req.body;
+  const photos = req.files as Express.Multer.File[];
   const product = await Product.findById(id);
 
   if (!product) return next(new ErrorHandler("Product Not Found", 404));
 
-  if (photo) {
-    if(product.photo){
-      await cloudinary.v2.uploader.destroy(getPublicIdFromUrl(product.photo));
+  // Handle multiple photo uploads
+  if (photos && photos.length > 0) {
+    // Delete existing photos from Cloudinary
+    if (product.photos && product.photos.length > 0) {
+      await Promise.all(product.photos.map(async (photoUrl) => {
+        await cloudinary.v2.uploader.destroy(getPublicIdFromUrl(photoUrl));
+      }));
     }
-    const cloudinaryResponse = await cloudinary.v2.uploader.upload(photo.path, {
-      folder: "products",
-    });
-    product.photo = cloudinaryResponse.secure_url;
+    
+    const photoUrls = await Promise.all(photos.map(async (photo) => {
+      const cloudinaryResponse = await cloudinary.v2.uploader.upload(photo.path, {
+        folder: "products",
+      });
+      return cloudinaryResponse.secure_url;
+    }));
+    product.photos = photoUrls;
   }
 
   if (name) product.name = name;
@@ -190,8 +206,11 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
   const product = await Product.findById(req.params.id);
   if (!product) return next(new ErrorHandler("Product Not Found", 404));
 
-  if (product.photo) {
-    await cloudinary.v2.uploader.destroy(getPublicIdFromUrl(product.photo));
+  // Delete photos from Cloudinary
+  if (product.photos && product.photos.length > 0) {
+    await Promise.all(product.photos.map(async (photoUrl) => {
+      await cloudinary.v2.uploader.destroy(getPublicIdFromUrl(photoUrl));
+    }));
   }
 
   await product.deleteOne();
@@ -207,6 +226,7 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
     message: "Product Deleted Successfully",
   });
 });
+
 
 function getPublicIdFromUrl(photoUrl: string): string {
   const publicIdMatch = /\/v\d+\/(.*\/)?(.+?)\.[a-zA-Z]+(#.*)?$/.exec(photoUrl);

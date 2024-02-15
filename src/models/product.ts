@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 interface IProduct extends Document {
   name: string;
-  photo: string;
+  photos: string[];
   price: number;
   stock: number;
   description: string;
@@ -25,9 +25,9 @@ const schema = new mongoose.Schema(
       required: [true, "Please enter Product Description"],
       
     },
-    photo: {
-      type: String,
-      required: [true, "Please enter Photo"],
+    photos: {
+      type: [String],
+      required: [true, "Please enter Photo(s)"],
     },
     price: {
       type: Number,
