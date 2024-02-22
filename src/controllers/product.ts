@@ -167,10 +167,11 @@ export const updateProduct = TryCatch(async (req, res, next) => {
   if (photos && photos.length > 0) {
     // Delete existing photos from Cloudinary
     if (product.photos && product.photos.length > 0) {
-      await Promise.all(product.photos.map(async (photoUrl) => {
-        await cloudinary.v2.uploader.destroy(getPublicIdFromUrl(photoUrl));
-      }));
+      for (let i = 0; i < product.photos.length; i++) {
+        await cloudinary.v2.uploader.destroy(getPublicIdFromUrl(product.photos[i]));
+      }
     }
+    
     
     const photoUrls = await Promise.all(photos.map(async (photo) => {
       const cloudinaryResponse = await cloudinary.v2.uploader.upload(photo.path, {
@@ -208,9 +209,9 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
 
   // Delete photos from Cloudinary
   if (product.photos && product.photos.length > 0) {
-    await Promise.all(product.photos.map(async (photoUrl) => {
-      await cloudinary.v2.uploader.destroy(getPublicIdFromUrl(photoUrl));
-    }));
+    for (let i = 0; i < product.photos.length; i++) {
+      await cloudinary.v2.uploader.destroy(getPublicIdFromUrl(product.photos[i]));
+    }
   }
 
   await product.deleteOne();
